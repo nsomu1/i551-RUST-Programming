@@ -9,7 +9,6 @@ use nix::unistd::pipe;
 
 
 
-
 const TEST_DATA: &str = "t10k-images-idx3-ubyte";
 const TEST_LABELS: &str  = "t10k-labels-idx1-ubyte";
 const TRAINING_DATA: &str  = "train-images-idx3-ubyte";
@@ -66,7 +65,6 @@ Ok(Args { data_dir, k, n_test,n_proc })
    
 }
 
-#[allow(dead_code)]
 fn main() {
     let argv: Vec<String> = env::args().collect();
     let args;
@@ -84,7 +82,7 @@ test_data.len()
 args.n_test as usize
     };
     let mut ok = 0;
-    
+   
      let mut process_vec: Vec<Pipeio> =Vec::with_capacity(args.n_proc);
     
      let pid_c:Pid = getpid();
@@ -97,7 +95,6 @@ args.n_test as usize
                 Ok(ForkResult::Parent { child: _, .. }) => {
   }
   Ok(ForkResult::Child) => {
-  
    break;
   },
   Err(_) => println!("Fork failed"),
@@ -111,21 +108,14 @@ args.n_test as usize
       for _i in 0..n {
         if l == args.n_proc {
            l = 0;
-
-        }
-       
-        
            
-                 
+     }
+       
         l = l + 1;
 
       }
-     } else {
+     } 
      
-
-     }
-   
-    
     for i in 0..n {
 let nearest_index = knn(&train_data, &test_data[i].features, args.k);
 let predicted = train_data[nearest_index].label;
