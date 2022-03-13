@@ -1,285 +1,130 @@
-//remove once project is completed 
-
-#![allow(dead_code)] 
-
-#![allow(unused_variables, unused_imports)] 
-
-
-use std::fs; 
-
-use std::fs::File; 
-
-use byteorder::BigEndian; 
-
-use std::io::BufReader; 
-
-use byteorder::ByteOrder; 
-
-use std::cmp::Ordering; 
-
-use std::collections::HashMap; 
-  
-
-type Feature = u8; 
-
-type Label = u8; 
-
-type Index = usize; 
-
-type AxType = usize; 
-
-pub struct LabeledFeatures { 
-
-    ///feature set 
-
-    pub features: Vec<Feature>, 
-
-  
-
-    ///classification of feature set 
-
-    pub label: Label, 
-
-} 
-
-pub struct AuxSt { 
-
-    pub label: AxType, 
-
-    pub dist: AxType, 
-
-    pub index: AxType, 
-
-} 
-
-  
-
-///magic number used at start of MNIST data file 
-
-const DATA_MAGIC: u32 = 0x803; 
-
-  
-
-///magic number used at start of MNIST label file 
-
-const LABEL_MAGIC: u32 = 0x801; 
-
-  
-
-///return labeled-features with features read from data_dir/data_file_name// 
-
-///and labels read from data_dir/label_file_name 
-
-pub fn read_labeled_data(data_dir: &str, 
-
-			 data_file_name: &str, label_file_name: &str) 
-
-			 -> Vec<LabeledFeatures> 
-
-{ 
-
-// following line will be replaced during your implementation 
-
-//concatenate directory and filename 
-
-    let d_path=format!("{}/{}",data_dir,data_file_name); 
-
-    let l_path=format!("{}/{}",data_dir,label_file_name); 
-
-//Debuging 
-
-	//println!("{}",d_path); 
-
-	//println!("{}",l_path); 
-
-//create and read variables
-//store data from data and label file in vectors			     
-
-     let mut data_vec = Vec::new(); 
-
-     let mut label_vec = Vec::new(); 
-
-     data_vec=fs::read(&d_path).expect("unable to read data");	 
-
-     label_vec=fs::read(&l_path).expect("unable to read label");	 
-
-//Success behavior of len()
-
-     //println!("{}",data_vec.len()); 
-
-     //println!("{}",label_vec.len()); 
-
-
-//Data_Magic Number Checked
-
-    
-//assert_eq!(DATA_MAGIC, big_data_magic_label(&data_vec,0,4)); 
-
-//Label_Magic Number Checked  
-
-//assert_eq!(LABEL_MAGIC, big_data_magic_label(&label_vec,0,4)); 
-
-//No. of Images Checked
-
-	let mut n: usize = big_data_magic_label(&data_vec,4,8).try_into().unwrap(); 
-
-	//assert_eq!(60000, n); 
-
-	//assert_eq!(10000, n);
-	
-	//println!("Checking #{} of Images Successfully!",n); 
-
-//No. of Labels Checked
-
-	n = big_data_magic_label(&label_vec,4,8).try_into().unwrap(); 
-
-	//assert_eq!(60000, n);
-
-	//assert_eq!(10000, n);
-
-	//println!("Checking #{} of Labels Successfully!",n); 
-
-
-//number of Data_rows checked
-
-	let mut data_rows: usize = big_data_magic_label(&data_vec,8,12).try_into().unwrap(); 
-
- 	//assert_eq!(28, data_rows); 
-
-	//println!("Checking #{} of Data_rows Successfully!",data_rows); 
-
-//number of Data_columns checked
-
-	let mut data_columns: usize = big_data_magic_label(&data_vec,12,16).try_into().unwrap(); 
-
-//assert_eq!(28, data_columns); 
-
-//println!("Checking #{} of Data_columns Successfully!",data_columns); 
-
-
-// declaring variable for storing n labeled images 
-
-     let mut image_size=(&data_rows*&data_columns) as usize; 
-
-     let mut final_v = Vec::with_capacity(n); 
-
-  
-     let mut data_image = &data_vec[16..]; 
-
-     let mut label_image = &label_vec[8..]; 
-
-  
-        for i in 0..n as usize { 
-
-     let mut start=i*image_size; 
-
-     let mut finish = start+image_size; 
-
-     let image_vec=  &data_image[start..finish];  
-
-     let dummy = LabeledFeatures { 
-
-	features : image_vec.to_vec(), 
-
-	label : label_image[i], 
-
-	}; 
-
-    	final_v.push(dummy); 
-
-    } 
-//final vector returned
-    final_v 
-
-    } 
-
-//Function which returns the bytes in BigEndian Format. 
-
-pub fn big_data_magic_label(n: &[u8],mut initial_byte: usize,mut final_byte: usize )-> u32{ 
-
- return BigEndian::read_u32(&n[initial_byte.. final_byte]); 
-
-} 
-
-///Return the index of an image in training_set which is among the k 
-
-///nearest neighbors of test and has the same label as the most 
-
-///common label among the k nearest neigbors of test. 
-
-impl Eq for AuxSt {} 
-
-impl Ord for AuxSt { 
-
-    fn cmp(&self, other: &Self) -> Ordering { 
-
-        self.dist.cmp(&other.dist) 
-
-    } 
-
-} 
-
-impl PartialOrd for AuxSt { 
-
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { 
-
-        Some(self.cmp(other)) 
-
-    } 
-
-} 
-impl PartialEq for AuxSt { 
-
-    fn eq(&self, other: &Self) -> bool { 
-
-        self.dist == other.dist 
-
-    } 
-
-} 
-pub fn distance_square(tr_image: &Vec<Feature>,tt_image: &Vec<Feature>) 
-
-							-> AxType 
-{ 
-let mut sqof_dist : usize; 
-sqof_dist = 0; 
-for i in 0..784 as usize { 
-sqof_dist =  sqof_dist + ((tr_image[i] as isize - tt_image[i] as isize) *
-		 (tr_image[i] as isize - tt_image[i] as isize))as usize ; 
-} 
-return sqof_dist
-} 
-
-
-pub fn knn(training_set: &Vec<LabeledFeatures>, test: &Vec<Feature>, k: usize) 
-
-       -> Index 
-
-{ 
-
-let mut d: usize; 
-
-let mut vector_slice = Vec:: new(); 
-
-   for i in 0..training_set.len() 
-
-     { 
-
-	d = distance_square(&training_set[i].features,test); 
-	let dummy = AuxSt { 
-	dist : d, 
-	label : training_set[i].label as usize, 
-	index : i, 
-	}; 
-	vector_slice.push(dummy); 
-
-     } 
-
-vector_slice.sort_by_key(|d| d.dist); 
-
-let mut aucvec = &vector_slice[..k] ; 
-
-return vector_slice[0].index;
-} 
-
-
+//#![allow(dead_code)]
+//#![allow(unused_variables)]
+
+
+use std::fs;
+
+//this may result in non-deterministic behavior
+//use std::collections::HashMap;
+
+//use this for deterministic behavior
+use hash_hasher::HashedMap;
+
+type Feature = u8;
+type Label = u8;
+type Dist = i32;
+type Index = usize;
+
+fn be_bytes_to_u32(bytes: &[u8]) -> u32 {
+    ((bytes[0] as u32) << 24) |
+    ((bytes[1] as u32) << 16) |
+    ((bytes[2] as u32) << 8) |
+    ((bytes[3] as u32) << 0)
+}
+
+pub struct LabeledFeatures {
+    ///feature set
+    pub features: Vec<Feature>,
+
+    ///classification of feature set
+    pub label: Label,
+}
+
+///magic number used at start of MNIST data file
+const DATA_MAGIC: u32 = 0x803;
+
+///magic number used at start of MNIST label file
+const LABEL_MAGIC: u32 = 0x801;
+
+///return labeled-features with features read from data_dir/data_file_name
+///and labels read from data_dir/label_file_name
+pub fn read_labeled_data(data_dir: &str,
+			 data_file_name: &str, label_file_name: &str)
+			 -> Vec<LabeledFeatures>
+{
+    let data_path = format!("{}/{}", data_dir, data_file_name);
+    let label_path = format!("{}/{}", data_dir, label_file_name);
+    let data_bytes = fs::read(&data_path)
+	.expect(&format!("unable to read {}", data_path));
+    let label_bytes = fs::read(&label_path)
+	.expect(&format!("unable to read {}", label_path));
+    assert_eq!(be_bytes_to_u32(&data_bytes), DATA_MAGIC);
+    assert_eq!(be_bytes_to_u32(&label_bytes), LABEL_MAGIC);
+    let n_images = be_bytes_to_u32(&data_bytes[4..8]) as usize;
+    let n_labels = be_bytes_to_u32(&label_bytes[4..8]) as usize;
+    assert_eq!(n_images, n_labels);
+    let n = n_images;
+    let n_rows = be_bytes_to_u32(&data_bytes[8..12]) as usize;
+    let n_cols = be_bytes_to_u32(&data_bytes[12..16]) as usize;
+    let n_pixels = n_rows * n_cols;
+    let data_start: usize = 16;
+    let label_start: usize = 8;
+    let mut results = Vec::with_capacity(n as usize);
+    for i in 0..n {
+	let start = data_start + i*n_pixels;
+	let end = start + n_pixels;
+	let pixels_slice = &data_bytes[start..end];
+	let mut features = Vec::with_capacity(n_pixels);
+	features.extend_from_slice(pixels_slice);
+	let label = label_bytes[label_start + i];
+	results.push(LabeledFeatures { features, label });
+    }
+    return results;
+}
+
+///return square of cartesian distance between coord1 and coord2.
+fn distance2(coords1: &[Feature], coords2: &[Feature]) -> Dist {
+    assert_eq!(coords1.len(), coords2.len());
+    let mut dist2 = 0 as Dist;
+    for i in 0..coords1.len() {
+	let x1 = coords1[i] as Dist;
+	let x2 = coords2[i] as Dist;
+	dist2 += (x1 - x2) * (x1 - x2);
+    }
+    dist2
+}
+
+#[derive(PartialEq, PartialOrd, Eq, Ord)]
+struct DistLabel {
+    /// square of distance of this data point from test data point
+    dist_sq: Dist,
+    /// label for this data point
+    label: Label,
+    /// index of this data point
+    index: Index,
+}
+
+#[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Copy)]
+struct LabelIndex(Label, Index);
+
+fn mode(labels_with_index: &[LabelIndex]) -> &LabelIndex {
+    //let mut counts = HashMap::new();
+    let mut counts = HashedMap::default();
+    for &label_index in labels_with_index {
+	*counts.entry(label_index.0).or_insert(0) += 1;
+    }
+    let (label,_ ) = counts.into_iter().max_by_key(|&(_, count)| count)
+	.expect("must have at least one label for k > 0");
+    labels_with_index.iter().find(|&x| x.0 == label).expect("label must exist")
+}
+
+///Return the index of an image in training_set which is among the k
+///nearest neighbors of test and has the same label as the most
+///common label among the k nearest neigbors of test.
+pub fn knn(training_set: &Vec<LabeledFeatures>, test: &Vec<Feature>, k: usize)
+       -> Index
+{
+    let n = training_set.len();
+    let mut dists: Vec<DistLabel> = Vec::with_capacity(n);
+    for index in 0..n {
+	let dist_sq = distance2(&training_set[index].features, test);
+	let label = training_set[index].label;
+	dists.push(DistLabel { dist_sq, label, index });
+    }
+    dists.sort();
+    let label_indexes = dists[0..k]
+	.iter()
+	.map(|x| LabelIndex(x.label, x.index))
+	.collect::<Vec<LabelIndex>>();
+    mode(&label_indexes).1
+}
