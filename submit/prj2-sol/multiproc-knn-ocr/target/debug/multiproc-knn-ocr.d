@@ -1,0 +1,1 @@
+/home/nsomu1/projects/i551/submit/prj2-sol/multiproc-knn-ocr/target/debug/multiproc-knn-ocr: /home/nsomu1/projects/i551/submit/prj1-sol/knn-ocr/src/lib.rs /home/nsomu1/projects/i551/submit/prj2-sol/multiproc-knn-ocr/src/main.rs
