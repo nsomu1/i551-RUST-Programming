@@ -1,0 +1,19 @@
+Name:		Naveena Somu
+B-Number:	B00939396
+Email:		nsomu1@binghamton.edu
+
+Add text here as needed.
+
+Protocol:
+
+1. Server program takes three input arguments(SERVER_DIR, DATA_DIR, K) for server and three arguments(SERVER_DIR, DATA_DIR, N_TESTS) for client(from command line
+2. Now from the argv array arguments are assigned to variables
+3. Change the current working directory to server directory using chdir() funtion
+4. Fork the process
+5. Server created a worker process to handle requests from client
+6. Client send a test image to the server
+7. Worker process on the server responds with the index of a training image
+8. Use file descriptors to open the files in particular paths and close them at necessary places
+9. Print the client process ID(PID) in server
+10. Print the success percentage which is matched with the nearest image.
+
